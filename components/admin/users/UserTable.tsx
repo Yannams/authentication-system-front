@@ -28,7 +28,10 @@ export default function UserTable() {
 
   return (
     <>
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-between mb-4">
+        <h1 className="text-2xl font-bold mb-6">
+            Gestion des utilisateurs
+        </h1>
         <Button
           onClick={() => {
             setIsEdit(false)

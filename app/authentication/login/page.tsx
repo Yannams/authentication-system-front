@@ -8,6 +8,7 @@ export default function Login(){
         <AuthForm
           type="login"
         />
+        
       </AuthLayout>
     )
 }

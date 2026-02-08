@@ -15,3 +15,8 @@ export const registerSchema = z.object({
 export const forgotPasswordSchema = z.object({
   email: z.string().email("Email invalide"),
 })
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1, "Token requis"),
+  password: z.string().min(6, "Mot de passe trop court"),
+})
