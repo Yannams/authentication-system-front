@@ -1,17 +1,15 @@
 "use client";
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/hooks/useAuth";
 import { logout } from "@/services/auth/auth.service";
 import { LogOut, UserCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
-  const user = JSON.parse(
-    decodeURIComponent(
-      document.cookie.split("; ").find((c) => c.startsWith("user="))?.split("=")[1] || "null"
-    ) || "null"
-  );
+ 
+  const {user} = useAuth() 
 
   const router = useRouter();
   const handleLogout = async () => {

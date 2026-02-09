@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { use, useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 
@@ -25,8 +25,9 @@ import {
 } from "./Schema"
 
 import { AuthFormType } from "./Types"
-import { forgotPassword, login, register } from "@/services/auth/auth.service"
+import { forgotPassword, resetPassword } from "@/services/auth/auth.service"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/hooks/useAuth"
 
 
 
@@ -43,14 +44,9 @@ const schemaMap = {
 }
 
 export default function AuthForm({ type }: { type: AuthFormType }) {
-
-  const [globalMessage, setGlobalMessage] = useState<{
-    type: "success" | "error"
-    text: string
-  } | null>(null)
-  // const [pendingToken, setPendingToken] = useState<string | null>(null)
-  //  const [user, setUser] = useState<any>(null);
-
+  const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
+  const {login, register} = useAuth()
+   
   const form = useForm({
     resolver: zodResolver(schemaMap[type]),
     defaultValues: {
@@ -64,51 +60,52 @@ export default function AuthForm({ type }: { type: AuthFormType }) {
 
   const router = useRouter();
 
-  // useEffect(() => {
-  //   if (!pendingToken) return;
-  //   const encodedToken = encodeURIComponent(pendingToken);
-  //   const secure = window.location.protocol === "https:" ? "; Secure" : "";
-  //   document.cookie = `accessToken=${encodedToken}; Path=/; SameSite=Lax${secure}`;
-  // }, [pendingToken]);
-
-  // useEffect(() => {
-  //   if (!user) return;
-  //   const userData = JSON.stringify(user);
-  //   const secure = window.location.protocol === "https:" ? "; Secure" : "";
-  //   document.cookie = `user=${encodeURIComponent(userData)}; Path=/; SameSite=Lax${secure}`;  
-  // },[user])
-
   async function onSubmit (values: any) {
-    setGlobalMessage(null)
+    setMessage(null); // reset message
 
     // 🔐 LOGIN
     if (type === "login") {
-      try {
-        const res= await login(values.email, values.password)
-        setGlobalMessage({
-          type: "success",
-          text: "Connexion réussie.",
-        })
+      const response =  await login(values.email, values.password)
+      if (response.success) {
+        console.log(response.user);
         
-        if (res.data.user.role=="ADMIN") {
-          router.push("/admin/users")
-        } else {  
-          router.push("/")
+        if (response.user?.role === "ADMIN") {
+          router.push("/admin/users");
+        } else {
+          router.push("/");
         }
-
-      } catch (error) {
-        setGlobalMessage({
+      }else {
+        setMessage({
           type: "error",
-          text: "Email ou mot de passe incorrect.",
+          text: "Email ou mot de passe incorrect. Veuillez réessayer.",
         })
       }
       return
     }
 
+  
+    // 📝 REGISTER (placeholder)
+    if (type === "register") {
+      try {
+        await register(values.firstName, values.lastName, values.email, values.password)
+        setMessage({
+          type: "success",
+          text: "Compte créé avec succès. Vous recevrez un lien de verification par email sous peu.",
+        })
+      } catch (error) {
+        setMessage({
+          type: "error",
+          text: "Une erreur est survenue lors de l'inscription. Veuillez réessayer.",
+        })
+      }
+      
+    }
+
+    
     // 🔁 FORGOT PASSWORD
     if (type === "forgot-password") {
       await forgotPassword(values.email)
-      setGlobalMessage({
+      setMessage({
         type: "success",
         text:
           "Si l’email est correct, vous recevrez un message pour réinitialiser votre mot de passe.",
@@ -116,22 +113,22 @@ export default function AuthForm({ type }: { type: AuthFormType }) {
       return
     }
 
-    // 📝 REGISTER (placeholder)
-    if (type === "register") {
-      try {
-        const res = await register(values.firstName, values.lastName, values.email, values.password)
-        setGlobalMessage({
-          type: "success",
-          text: "Compte créé avec succès. Vous recevrez un lien de verification par email sous peu.",
-        })
-      } catch (error) {
-        setGlobalMessage({
-          type: "error",
-          text: "Une erreur est survenue lors de l'inscription. Veuillez réessayer.",
-        })
+      // 🔁 RESET PASSWORD (placeholder)
+      if (type === "resetpassword") {
+        try {
+          await resetPassword(values.token, values.password)
+          setMessage({
+            type: "success",
+            text: "Mot de passe réinitialisé avec succès. Vous pouvez maintenant vous connecter.",
+          })
+          router.push("/authentication/login")
+        } catch (error) {
+          setMessage({
+            type: "error",
+            text: "Une erreur est survenue lors de la réinitialisation du mot de passe. Veuillez réessayer.",
+          })
+        }
       }
-      
-    }
   }
 
   return (
@@ -141,15 +138,15 @@ export default function AuthForm({ type }: { type: AuthFormType }) {
         className="space-y-4"
       >
         {/* Message global */}
-        {globalMessage && (
+        {message && (
           <div
             className={`rounded-md p-3 text-sm ${
-              globalMessage.type === "error"
+              message.type === "error"
                 ? "bg-destructive/10 text-destructive"
                 : "bg-green-500/10 text-green-600"
             }`}
           >
-            {globalMessage.text}
+            {message.text}
           </div>
         )}
 
