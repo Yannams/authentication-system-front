@@ -11,16 +11,12 @@ export const userPasswordSchema = z.object({
 })
 
 export const userRoleSchema = z.object({
-  role: z.enum(["USER", "ADMIN"], {
-    required_error: "Role requis",
-  }),
+  role: z.enum(["USER", "ADMIN"], { message: "Role requis" }),
 })
 
 export const createUserSchema = userInfoSchema.extend({
   password: z.string().min(6, "Mot de passe requis"),
-  role: z.enum(["USER", "ADMIN"], {
-    required_error: "Role requis",
-  }),
+  role: z.enum(["USER", "ADMIN"], { message: "Role requis" }),
 })
 
 export const updateUserInfoSchema = userInfoSchema
