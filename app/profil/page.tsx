@@ -2,25 +2,48 @@
 
 import ProfileCard from "@/components/profil/ProfileCard"
 import ProfileForm from "@/components/profil/ProfileForm"
-import { UserProfile } from "@/components/profil/types"
+import { Button } from "@/components/ui/button"
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
+import { useAuth } from "@/hooks/useAuth"
+import { UserCircle } from "lucide-react"
+import { useRouter } from "next/navigation"
 
-const mockUser: UserProfile = {
-  id: 1,
-  firstName: "Jean",
-  lastName: "Dupont",
-  email: "jean@test.com",
-}
 
 export default function ProfilePage() {
+  const { user } = useAuth()
+  const  router = useRouter()
+
+  if (!user) {
+    return (
+      <div className="flex w-full h-screen items-center justify-center">
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <UserCircle className="w-15 h-15" />
+              </EmptyMedia>
+              <EmptyTitle>No User</EmptyTitle>
+              <EmptyDescription>No data found</EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <Button onClick={()=>router.push('/authentication/login')}>Login</Button>
+            </EmptyContent>
+          </Empty>
+      </div>
+   
+    )
+  }
+
+  const profileEdit = async() => {
+
+  }
   const handleSubmit = (values: any) => {
     console.log("UPDATE PROFILE", values)
-    // Appel API ici
   }
 
   return (
     <div className="py-10 px-4">
       <ProfileCard>
-        <ProfileForm user={mockUser} onSubmit={handleSubmit} />
+        <ProfileForm user={user} onSubmit={handleSubmit} />
       </ProfileCard>
     </div>
   )
