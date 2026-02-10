@@ -22,6 +22,7 @@ import DeleteDialog from "./DeleteDialog"
 import { User } from "./types"
 import { deleteUser, getUsers } from "@/services/admin/users/users.service"
 import { MoreHorizontal } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 
 
 export default function UserTable() {
@@ -32,9 +33,13 @@ export default function UserTable() {
     "info"
   )
   const [users, setUsers]=useState<User[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [selectedUser, setSelectedUser] = useState<User | undefined>()
   const confirmDelete = async (userId :any ) => {
-    const res = await deleteUser(userId)
+    await deleteUser(userId)
+    setUsers((prev) => prev.filter((user) => user.id !== userId))
+    setOpenDelete(false)
+    setSelectedUser(undefined)
   }
   const handleUserCreated = (newUser: User) => {
     setUsers((prev) => {
@@ -42,11 +47,21 @@ export default function UserTable() {
       return [newUser, ...prev]
     })
   }
+  const handleUserUpdated = (updatedUser: User) => {
+    setUsers((prev) =>
+      prev.map((user) => (user.id === updatedUser.id ? updatedUser : user))
+    )
+  }
 
   useEffect(()=>{
     const setListOfUsers = async () => {
-      const res = await getUsers()
-      setUsers(res.data)
+      setIsLoading(true)
+      try {
+        const res = await getUsers()
+        setUsers(res.data)
+      } finally {
+        setIsLoading(false)
+      }
     } 
     setListOfUsers()
   },[])  
@@ -81,66 +96,85 @@ export default function UserTable() {
           </TableHeader>
 
           <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>
-                  {user.firstName} {user.lastName}
-                </TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell className="text-right space-x-2">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="icon" aria-label="Actions">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setIsEdit(true)
-                          setEditAction("info")
-                          setSelectedUser(user)
-                          setOpenForm(true)
-                        }}
-                      >
-                        Modifier les infos
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setIsEdit(true)
-                          setEditAction("password")
-                          setSelectedUser(user)
-                          setOpenForm(true)
-                        }}
-                      >
-                        Modifier le mot de passe
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setIsEdit(true)
-                          setEditAction("role")
-                          setSelectedUser(user)
-                          setOpenForm(true)
-                        }}
-                      >
-                        Modifier le role
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+            {isLoading
+              ? Array.from({ length: 10 }).map((_, index) => (
+                  <TableRow key={`skeleton-${index}`}>
+                    <TableCell>
+                      <Skeleton className="h-4 w-40" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-56" />
+                    </TableCell>
+                    <TableCell className="text-right space-x-2">
+                      <Skeleton className="inline-block h-8 w-8" />
+                      <Skeleton className="inline-block h-8 w-24" />
+                    </TableCell>
+                  </TableRow>
+                ))
+              : users.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell>
+                      {user.firstName} {user.lastName}
+                    </TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell className="text-right space-x-2">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            aria-label="Actions"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setIsEdit(true)
+                              setEditAction("info")
+                              setSelectedUser(user)
+                              setOpenForm(true)
+                            }}
+                          >
+                            Modifier les infos
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setIsEdit(true)
+                              setEditAction("password")
+                              setSelectedUser(user)
+                              setOpenForm(true)
+                            }}
+                          >
+                            Modifier le mot de passe
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setIsEdit(true)
+                              setEditAction("role")
+                              setSelectedUser(user)
+                              setOpenForm(true)
+                            }}
+                          >
+                            Modifier le role
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
 
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => {
-                      setSelectedUser(user)
-                      setOpenDelete(true)
-                    }}
-                  >
-                    Supprimer
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedUser(user)
+                          setOpenDelete(true)
+                        }}
+                      >
+                        Supprimer
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
           </TableBody>
         </Table>
       </div>
@@ -152,6 +186,7 @@ export default function UserTable() {
         user={selectedUser}
         editAction={editAction}
         onUserCreated={handleUserCreated}
+        onUserUpdated={handleUserUpdated}
       />
 
       <DeleteDialog

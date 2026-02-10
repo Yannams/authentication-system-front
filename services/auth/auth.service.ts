@@ -6,4 +6,4 @@ export const forgotPassword = async (email: string) => api.post("/auth/forgot-pa
 export const resetPassword = async (token: string, newPassword: string) => api.post("/auth/reset-password", { token, newPassword });
 export const logout = async () => api.post("/auth/logout");
 export const refreshToken = () => api.post("/auth/refresh");
-export const authMe=()=>api.get("/auth/me   ")
+export const authMe = () => api.get("/auth/me")

@@ -14,6 +14,7 @@ import {
 
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
 import {
   Select,
   SelectContent,
@@ -142,7 +143,17 @@ export default function UserForm({ mode, defaultValues, onSubmit }: Props) {
           />
         )}
 
-        <Button type="submit" className="w-full">
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={form.formState.isSubmitting}
+          aria-busy={form.formState.isSubmitting}
+        >
+          {form.formState.isSubmitting && (
+            <span className="mr-2 inline-flex">
+              <Spinner />
+            </span>
+          )}
           {submitLabelMap[mode]}
         </Button>
       </form>

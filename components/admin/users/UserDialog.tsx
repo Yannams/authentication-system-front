@@ -23,6 +23,7 @@ interface Props {
   user?: User
   editAction?: "info" | "password" | "role"
   onUserCreated?: (user: User) => void
+  onUserUpdated?: (user: User) => void
 }
 
 export default function UserDialog({
@@ -32,6 +33,7 @@ export default function UserDialog({
   user,
   editAction = "info",
   onUserCreated,
+  onUserUpdated,
 }: Props) {
   const userId = user?.id
 
@@ -52,17 +54,41 @@ export default function UserDialog({
 
   const handleUpdateInfo = async (values: any) => {
     if (!userId) return
-    await updateUserInfo(userId, values.firstName, values.lastName, values.email)
+    const response = await updateUserInfo(
+      userId,
+      values.firstName,
+      values.lastName,
+      values.email
+    )
+    const updatedUser = response.data ?? {
+      ...user,
+      firstName: values.firstName,
+      lastName: values.lastName,
+      email: values.email,
+    }
+    if (updatedUser && onUserUpdated) {
+      onUserUpdated(updatedUser)
+    }
+    onOpenChange(false)
   }
 
   const handleUpdatePassword = async (values: any) => {
     if (!userId) return
     await updateUserPassword(userId, values.password)
+    onOpenChange(false)
   }
 
   const handleUpdateRole = async (values: any) => {
     if (!userId) return
-    await updateUserRole(userId, values.role)
+    const response = await updateUserRole(userId, values.role)
+    const updatedUser = response.data ?? {
+      ...user,
+      role: values.role,
+    }
+    if (updatedUser && onUserUpdated) {
+      onUserUpdated(updatedUser)
+    }
+    onOpenChange(false)
   }
 
   return (

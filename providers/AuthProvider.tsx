@@ -11,16 +11,16 @@ import {
   register,
 } from "@/services/auth/auth.service"
 import { setAccessToken as setInterceptorAccessToken } from "@/services/interceptor"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
+import { Spinner } from "@/components/ui/spinner"
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserProfile | null>(null)
-  const [accessToken, setAccessToken] = useState<string | null>(null)
+  const [, setAccessToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const router = useRouter()
   const pathname = usePathname()
   const isAuthRoute = useMemo(
-    () => pathname?.startsWith("/authentication"),
+    () => pathname?.startsWith("/authentication") ?? false,
     [pathname]
   )
 
@@ -44,13 +44,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const registerUser = async (
-    email: string,
-    password: string,
     firstName: string,
-    lastName: string
+    lastName: string,
+    email: string,
+    password: string
   ) => {
     try {
-      await register(email, password, firstName, lastName)
+      await register(firstName, lastName, email, password)
       return { success: true }
     } catch (error) {
       return { success: false }
@@ -74,6 +74,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         applyAccessToken(response.data.accessToken)
         const authMeResponse = await authMe()
         setUser(authMeResponse.data)
+        console.log(response);
+        
       } catch {
         setUser(null)
         applyAccessToken(null)
@@ -86,24 +88,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
   }, [])
 
-  useEffect(() => {
-    if (!loading && !accessToken && !isAuthRoute) {
-      router.push("/authentication/login")
-    }
-  }, [accessToken, isAuthRoute, loading, router])
+ 
 
-  useEffect(()=>{
-    console.log(accessToken);   
-    console.log(user);
-    
-    
-  },[accessToken, user])
-
-  if(loading) return null
+  if (loading && !isAuthRoute) return (
+    <div className="w-full h-screen flex justify-center items-center">
+      <Spinner className="w-10 h-12"/>
+    </div>
+  )
 
   return (
     <AuthContext.Provider
-      value={{ user, login: loginUser, logout: logoutUser, register: registerUser }}
+      value={{ user, loading, login: loginUser, logout: logoutUser, register: registerUser }}
     >
       {children}
     </AuthContext.Provider>
